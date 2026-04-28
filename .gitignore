@@ -3,6 +3,7 @@ __pycache__/
 *.pyo
 .env
 data/procurement.db
+procurement.log
 .playwright/
 node_modules/
 *.log
