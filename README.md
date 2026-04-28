@@ -57,7 +57,7 @@ Output                            → Best vendor, total savings, confidence sco
 ai-procurement-agent/
 ├── main.py                    # FastAPI app entry point
 ├── requirements.txt
-├── Dockerfile                 # Google Cloud Run container
+├── Dockerfile                 # Production container
 ├── seed_demo_data.py          # One-click demo dataset for hackathon pitching
 │
 ├── core/
@@ -306,7 +306,7 @@ All tables use INTEGER autoincrement PKs. No ORMs — raw aiosqlite for speed an
 - **Real data:** Scrapes live vendor directories (not mock APIs)
 - **Real ROI:** Calculates actual rupee savings against current spend
 - **Real AI:** Gemini 2.5 Flash powers requirement parsing, price extraction, and negotiation
-- **Real deployment:** Deployed on Google Cloud Run with a permanent HTTPS link
+- **Real deployment:** Deployed on Render with a permanent HTTPS link
 
 ### Judge FAQ (Preemptive)
 
@@ -329,12 +329,13 @@ A: The scraping layer (selectors, retry logic, anti-bot patterns) and the negoti
 
 ## Deployment
 
-See [`DEPLOY.md`](DEPLOY.md) for step-by-step instructions to deploy on **Google Cloud Run**.
+See [`DEPLOY.md`](DEPLOY.md) for step-by-step instructions to deploy on **Render**.
 
 Quick summary:
 1. Get a [Gemini API key](https://aistudio.google.com/app/apikey)
-2. Run `gcloud run deploy` with your Docker container
-3. Share the HTTPS URL with judges
+2. Connect your GitHub repo to Render as a Docker Web Service
+3. Add your `GEMINI_API_KEY` environment variable
+4. Deploy and share the HTTPS URL with judges
 
 ---
 
@@ -348,7 +349,7 @@ Quick summary:
 | Scraping | Playwright (async) |
 | Frontend | Vanilla HTML/JS (no build step) |
 | Messaging | WhatsApp wa.me links (Phase 1) / Meta API (Phase 2) |
-| Hosting | Google Cloud Run |
+| Hosting | Render |
 
 ---
 

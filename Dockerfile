@@ -1,4 +1,4 @@
-# ── ProcureIQ — Google Cloud Run Dockerfile ──
+# ── ProcureIQ — Production Dockerfile ──
 FROM python:3.11-slim
 
 # Install system deps for Playwright
@@ -14,7 +14,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Playwright browser setup — conditional to support Cloud Run free tier disk limits.
+# Playwright browser setup — conditional to support environments with disk limits.
 # Build with --build-arg INSTALL_PLAYWRIGHT=false to skip browser install (uses fallback vendors).
 # Build with --build-arg INSTALL_PLAYWRIGHT=true (default) to enable live scraping.
 ARG INSTALL_PLAYWRIGHT=true
@@ -27,7 +27,7 @@ RUN if [ "$INSTALL_PLAYWRIGHT" = "true" ]; then \
 
 COPY . .
 
-# Cloud Run sets PORT env var automatically
+# Render (and most cloud platforms) set PORT env var automatically
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080
 

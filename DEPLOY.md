@@ -1,14 +1,14 @@
-# 🚀 ProcureIQ Deployment Guide (Google Cloud Run + Gemini)
+# 🚀 ProcureIQ Deployment Guide (Render + Gemini)
 
 ## Objective
 
-Deploy the Procurement AI prototype to Google Cloud Run, obtain a public HTTPS live URL, and satisfy hackathon requirements:
+Deploy the Procurement AI prototype to Render, obtain a public HTTPS live URL, and satisfy hackathon requirements:
 
 - Cloud deployment ✅  
 - Uses at least one Google AI service (Gemini) ✅  
 - Public demo link for judges ✅
 
-Estimated deployment time: 20–30 minutes.
+Estimated deployment time: 10–15 minutes.
 
 ---
 
@@ -17,7 +17,7 @@ Estimated deployment time: 20–30 minutes.
 ```text
 Judge Browser
    ↓
-Google Cloud Run (FastAPI + Frontend + SQLite demo data)
+Render Web Service (FastAPI + Frontend + SQLite demo data)
    ↓
 Google Gemini API
 ```
@@ -28,270 +28,84 @@ Google Gemini API
 
 Before starting, have these ready:
 
-- Google account  
-- Credit/debit card (for enabling Google Cloud billing; free tier should cover demo)
-- Project zip file:
-  
-```text
-env_procurememt_system.zip
-```
-
+- GitHub account (to push the repo)
+- Render account (free tier available at https://render.com)
 - Gemini API key from:
 
 https://aistudio.google.com/app/apikey
 
 ---
 
-# Step 1 — Create Google Cloud Project
+# Step 1 — Push Code to GitHub
 
-Open:
+If not already on GitHub:
 
-https://console.cloud.google.com
-
-1. Click project selector (top bar)
-2. Click **New Project**
-
-Example:
-
-```text
-procurement-ai-hackathon
-```
-
-Click Create.
-
-Wait until project becomes active.
-
----
-
-# Step 2 — Enable Billing
-
-Go to:
-
-```text
-Billing → Link Billing Account
-```
-
-Enable billing for the project.
-
-(Cloud Run free tier should keep this at $0 for hackathon usage.)
-
----
-
-# Step 3 — Enable Required APIs
-
-Go to:
-
-```text
-Navigation Menu → APIs & Services → Library
-```
-
-Enable these APIs one by one:
-
-### Required
-
-- Cloud Run Admin API
-- Cloud Build API
-- Artifact Registry API
-
-### For AI Requirement
-
-- Generative Language API
-
----
-
-# Step 4 — Open Cloud Shell
-
-In top-right corner of Google Cloud Console:
-
-Click:
-
-```text
-Activate Cloud Shell
-```
-
-Wait for terminal to initialize.
-
----
-
-# Step 5 — Upload Project Zip
-
-Inside Cloud Shell:
-
-Click:
-
-```text
-⋮ → Upload
-```
-
-Upload:
-
-```text
-env_procurememt_system.zip
-```
-
----
-
-# Step 6 — Unzip Project
-
-Run:
+1. Create a new repository on GitHub.
+2. Push this project to the repo:
 
 ```bash
-unzip env_procurememt_system.zip
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
+git push -u origin main
 ```
-
-Check folder name:
-
-```bash
-ls
-```
-
-Enter project:
-
-```bash
-cd env_procurememt_system_v2
-```
-
-(Adjust folder name if yours differs.)
 
 ---
 
-# Step 7 — Create .dockerignore
+# Step 2 — Create Render Web Service
 
-Very important.
+1. Go to https://dashboard.render.com and sign in.
+2. Click **New +** → **Web Service**.
+3. Connect your GitHub repository.
+4. Render will auto-detect the `Dockerfile`.
 
-Run:
+Configure the service:
 
-```bash
-nano .dockerignore
-```
-
-Paste:
-
-```dockerignore
-.venv
-__pycache__
-*.pyc
-.git
-.env
-tests
-```
-
-Save:
-
-- CTRL+O
-- Enter
-- CTRL+X
+| Setting | Value |
+|---------|-------|
+| **Name** | `procurement-ai` (or any name) |
+| **Region** | Choose closest to you (e.g., Singapore) |
+| **Branch** | `main` |
+| **Runtime** | `Docker` |
+| **Plan** | Free (or Starter for faster builds) |
 
 ---
 
-# Step 8 — Verify Files
+# Step 3 — Add Environment Variable
 
-Run:
+In the Render dashboard for your service:
 
-```bash
-ls
-```
-
-You should see:
+1. Go to **Environment** tab.
+2. Click **Add Environment Variable**.
+3. Add:
 
 ```text
-Dockerfile
-main.py
-requirements.txt
+Key:   GEMINI_API_KEY
+Value: YOUR_GEMINI_KEY
 ```
 
-If yes, proceed.
+Click **Save**.
 
 ---
 
-# Step 9 — Add Gemini API Key
+# Step 4 — Deploy
 
-Generate API key if not already done:
+Click **Create Web Service** (or **Manual Deploy** → **Deploy latest commit** if already created).
 
-https://aistudio.google.com/app/apikey
+Render will build the Docker image and deploy it.
 
-Edit environment file:
-
-```bash
-nano .env
-```
-
-Add or verify:
-
-```env
-GEMINI_API_KEY=YOUR_GEMINI_KEY
-```
-
-Save.
+Wait 5–10 minutes for the build to complete.
 
 ---
 
-# Step 10 — Set Active GCP Project
+# Step 5 — Copy Live URL
 
-List projects:
-
-```bash
-gcloud projects list
-```
-
-Set correct one:
-
-```bash
-gcloud config set project YOUR_PROJECT_ID
-```
-
-Replace:
+After deployment, Render provides a URL like:
 
 ```text
-YOUR_PROJECT_ID
-```
-
-with actual project ID.
-
----
-
-# Step 11 — Deploy to Cloud Run
-
-Run:
-
-```bash
-gcloud run deploy procurement-ai \
---source . \
---region asia-south1 \
---allow-unauthenticated
-```
-
-When prompted:
-
-### Region
-
-Choose:
-
-```text
-asia-south1
-```
-
-### Public Access
-
-Choose:
-
-```text
-Y
-```
-
-Wait 5–10 minutes for build + deployment.
-
-Cloud Run will use your Dockerfile automatically.
-
----
-
-# Step 12 — Copy Live URL
-
-After deployment you should see:
-
-```text
-Service URL:
-https://procurement-ai-xxxxx.run.app
+https://procurement-ai.onrender.com
 ```
 
 Copy this.
@@ -300,7 +114,7 @@ This is your hackathon submission link.
 
 ---
 
-# Step 13 — Verify Deployment
+# Step 6 — Verify Deployment
 
 ## Health Check
 
@@ -338,13 +152,10 @@ Confirm:
 
 # If Build Fails Due To Playwright
 
-Edit Dockerfile:
+In the Render dashboard:
 
-```bash
-nano Dockerfile
-```
-
-Find:
+1. Go to **Settings** → edit `Dockerfile` directly or push an update.
+2. Find:
 
 ```dockerfile
 RUN playwright install chromium || true
@@ -356,13 +167,7 @@ Replace with:
 RUN python -m playwright install chromium
 ```
 
-Save.
-
-Redeploy:
-
-```bash
-gcloud run deploy procurement-ai --source . --region asia-south1 --allow-unauthenticated
-```
+3. Commit the change and trigger a manual deploy.
 
 ---
 
