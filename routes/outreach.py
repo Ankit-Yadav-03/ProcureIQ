@@ -1,6 +1,8 @@
+
 """
 Outreach Routes
-GET  /api/outreach/{requirement_id}     → Get outreach log with wa.me links
+---------------
+GET  /api/outreach/{requirement_id}     → Get outreach log with WhatsApp deep links
 POST /api/outreach/mark-sent/{log_id}  → Mark outreach as sent
 POST /api/outreach/webhook             → WhatsApp webhook receiver (Phase 2)
 """
@@ -43,7 +45,7 @@ async def verify_whatsapp_webhook(request: Request):
 @router.get("/outreach/{requirement_id}")
 async def get_outreach(requirement_id: int):
     """
-    Get all prepared outreach messages with wa.me links.
+    Get all prepared outreach messages with WhatsApp deep links.
     Use these links to manually send messages in Phase 1.
     """
     log = await get_outreach_log(requirement_id)
@@ -66,7 +68,7 @@ async def get_outreach(requirement_id: int):
         "total_messages": len(log),
         "batches": batches,
         "instructions": (
-            "Phase 1 (Manual): Click each wa.me link to send the pre-filled message. "
+            "Phase 1 (Manual): Click each WhatsApp link to send the pre-filled message. "
             "Mark each as sent after dispatching. "
             "Send batch 1 first, wait 10-15 mins, then send batch 2."
         ),
@@ -76,7 +78,7 @@ async def get_outreach(requirement_id: int):
 @router.post("/outreach/mark-sent/{log_id}")
 async def mark_sent(log_id: int):
     """Mark a specific outreach message as sent (called after manual dispatch)."""
-    async with get_db() as db:
+    async with get_db(write=True) as db:
         cursor = await db.execute(
             "SELECT id FROM outreach_log WHERE id = ?", (log_id,)
         )

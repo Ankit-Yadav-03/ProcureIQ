@@ -444,7 +444,8 @@
         const vendorId = v.vendor_id || v.id;
         const vendorName = v.vendor_name || v.name || '';
         const phone = v.phone || '—';
-        const wa = v.phone ? `<a class="wa-link" href="https://wa.me/91${v.phone}" target="_blank">WhatsApp ↗</a>` : '';
+        const phoneDigits = v.phone ? v.phone.replace(/\D/g, '') : '';
+        const wa = phoneDigits ? `<a class="wa-link" href="https://api.whatsapp.com/send?phone=${phoneDigits}" target="_blank">WhatsApp ↗</a>` : '';
         const storeLink = v.profile_url ? `<a class="wa-link" href="${v.profile_url}" target="_blank" style="border-color:var(--border); color:#888;">Shop ↗</a>` : '';
         const ratingDisplay = v.rating ? `<span style="color:var(--accent3);">${v.rating}⭐</span>` : '<span style="color:var(--muted); font-size:10px;">—</span>';
         const vendorStatus = v.status || v.contact_status || 'pending';

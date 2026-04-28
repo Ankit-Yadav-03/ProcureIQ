@@ -41,9 +41,10 @@ def _normalized_vendor_phone(vendor: dict) -> str | None:
 
 
 def _build_whatsapp_link(phone: str, message: str) -> str:
-    encoded = urllib.parse.quote(message)
+    encoded = urllib.parse.quote(message, safe="")
     normalized_phone = normalize_phone(phone)
-    return f"https://wa.me/{normalized_phone.replace('+', '')}?text={encoded}"
+    # Use official WhatsApp deep link — more reliable than wa.me
+    return f"https://api.whatsapp.com/send?phone={normalized_phone.lstrip('+')}&text={encoded}"
 
 
 async def _generate_message_for_vendor(
