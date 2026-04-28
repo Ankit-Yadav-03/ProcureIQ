@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+aiosqlite
+httpx
+playwright
+pydantic
+pydantic-settings
+python-multipart
+pytest
+pytest-asyncio
+google-genai

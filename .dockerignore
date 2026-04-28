@@ -1,0 +1,17 @@
+.venv
+__pycache__
+*.pyc
+.git
+.env
+tests
+
+# Local runtime artifacts — must NOT leak into production image
+*.log
+core/procurement.log
+data/procurement.db
+*.db
+.DS_Store
+.playwright/
+node_modules/
+dist/
+build/

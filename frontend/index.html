@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProcureIQ</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+
+  <header>
+    <div class="container">
+      <div class="header-inner">
+        <div class="logo">
+          <div class="logo-icon">⚡</div>
+          <div>
+            <div class="logo-text">Procurement Agent</div>
+            <div class="logo-sub">Real Vendor Negotiation Engine</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:16px;">
+          <div style="font-family:var(--mono); font-size:11px; color:var(--muted);">
+            <span class="status-dot" id="systemDot"></span>
+            <span id="systemStatus">Checking...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+
+      <!-- METRICS -->
+      <div class="metrics-bar" id="metricsBar">
+        <div class="metric-card">
+          <div class="metric-label">Requirements</div>
+          <div class="metric-value" id="metricRequirements">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Avg Savings</div>
+          <div class="metric-value" id="metricSavings">0%</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Success Rate</div>
+          <div class="metric-value" id="metricSuccess">0%</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Vendors</div>
+          <div class="metric-value" id="metricVendors">0</div>
+        </div>
+      </div>
+
+      <!-- INPUT -->
+      <div class="input-section">
+        <div class="section-label">// Procurement Requirement</div>
+        <div class="input-row">
+          <input class="main-input" id="requirementInput" type="text" placeholder="steel rod 5000kg delhi 100" />
+          <button class="btn" id="analyzeBtn" onclick="startAnalysis()">Analyze →</button>
+        </div>
+        <div class="input-hint">
+          Format: <span>item quantity+unit location current_price</span>
+          &nbsp;|&nbsp; Examples:
+          <span>copper wire 200kg mumbai 450</span>,
+          <span>ms pipe 1000kg delhi 85</span>
+        </div>
+      </div>
+
+      <!-- PIPELINE STATUS -->
+      <div class="pipeline" id="pipeline">
+        <div class="pipeline-step pending" id="step-parse">
+          <span class="step-icon">📝</span>
+          <span class="step-num">01</span>
+          <span class="step-name">Parse</span>
+        </div>
+        <div class="pipeline-step pending" id="step-discover">
+          <span class="step-icon">🔍</span>
+          <span class="step-num">02</span>
+          <span class="step-name">Discover</span>
+        </div>
+        <div class="pipeline-step pending" id="step-outreach">
+          <span class="step-icon">📱</span>
+          <span class="step-num">03</span>
+          <span class="step-name">Outreach</span>
+        </div>
+        <div class="pipeline-step pending" id="step-responses">
+          <span class="step-icon">💬</span>
+          <span class="step-num">04</span>
+          <span class="step-name">Responses</span>
+        </div>
+        <div class="pipeline-step pending" id="step-extract">
+          <span class="step-icon">🧠</span>
+          <span class="step-num">05</span>
+          <span class="step-name">Extract</span>
+        </div>
+        <div class="pipeline-step pending" id="step-roi">
+          <span class="step-icon">💰</span>
+          <span class="step-num">06</span>
+          <span class="step-name">ROI</span>
+        </div>
+      </div>
+
+      <div class="panels" id="panels">
+        <!-- Vendors Panel -->
+        <div class="panel" id="vendorsPanel" style="display:none">
+          <div class="panel-header">
+            <span class="panel-title">// Vendor Discovery</span>
+            <span class="badge" id="vendorCount">0 vendors</span>
+          </div>
+          <div class="panel-body" id="vendorTableBody">
+            <div class="empty">
+              <div class="empty-icon">🔍</div>Waiting for vendor discovery...
+            </div>
+          </div>
+        </div>
+
+        <!-- Outreach Panel -->
+        <div class="panel" id="outreachPanel" style="display:none">
+          <div class="panel-header">
+            <span class="panel-title">// Outreach Messages</span>
+            <span class="badge yellow" id="outreachBadge">Phase 1: Manual</span>
+          </div>
+          <div class="panel-body" id="outreachBody">
+            <div class="empty">Outreach messages will appear here</div>
+          </div>
+        </div>
+
+        <!-- Response Submission Panel -->
+        <div class="panel" id="responsePanel" style="display:none">
+          <div class="panel-header">
+            <span class="panel-title">// Submit Vendor Response</span>
+            <span class="badge">Manual Entry</span>
+          </div>
+          <div class="panel-body">
+            <div class="response-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Vendor</label>
+                  <select class="form-input" id="vendorSelect"></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Vendor's Reply (paste raw WhatsApp/call message)</label>
+                <textarea class="form-textarea" id="vendorMessage"
+                  placeholder="e.g. ₹92 per kg + GST, delivery 2-3 days, min 500kg order"></textarea>
+              </div>
+              <button class="btn" onclick="submitResponse()" style="width:fit-content">
+                Submit Response →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROI Panel -->
+        <div class="panel" id="roiPanel" style="display:none">
+          <div class="panel-header">
+            <span class="panel-title">// ROI Analysis</span>
+            <div class="flex-gap">
+              <span class="badge" id="confidenceBadge">—</span>
+              <button class="btn btn-outline" onclick="runROI()">Run Analysis →</button>
+            </div>
+          </div>
+          <div class="panel-body" id="roiBody">
+            <div class="empty">Submit vendor responses first, then run ROI analysis</div>
+          </div>
+        </div>
+
+        <div id="best-deal-card" style="display:none; margin-top:16px; padding:16px; background:#0d2818; border:1px solid #00cc66; border-radius:8px;">
+          <div style="color:#00cc66; font-weight:bold; font-size:14px;">&#x1F3C6; Best Negotiated Deal</div>
+          <div id="best-deal-vendor" style="color:#e6edf3; margin-top:8px; font-size:13px;"></div>
+          <div id="best-deal-price" style="color:#00cc66; font-size:20px; font-weight:bold; margin-top:4px;"></div>
+          <div id="best-deal-savings" style="color:#8b949e; font-size:11px; margin-top:4px;"></div>
+          <div id="best-deal-inprogress" style="color:#8b949e; font-size:12px; margin-top:8px; display:none;">
+            <span style="color:#ffaa00;">&#x23F3;</span> <span id="best-deal-inprogress-msg"></span>
+          </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">// Activity Log</span>
+            <button class="btn btn-outline" onclick="clearLog()">Clear</button>
+          </div>
+          <div class="panel-body" style="padding:0">
+            <div class="log-container" id="activityLog">
+              <div class="log-line">
+                <span class="log-time">--:--:--</span>
+                <span class="log-msg info">System ready. Enter a procurement requirement to begin.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="toast"></div>
+
+  <script>
+    const API = window.location.origin;
+    let currentReqId = null;
+    let currentRequirementId = null;
+    let currentQuantity = null;
+    let currentUnit = null;
+    let pollInterval = null;
+    let bestDealInterval = null;
+    let negotiationLoadedFor = null;
+    let outreachLoggedFor = null;
+    let responsesLoggedCount = 0;
+
+    // ─── SYSTEM HEALTH ───────────────────────────────────────────────
+    async function checkHealth() {
+      try {
+        const [sysRes, llmRes] = await Promise.all([
+          fetch(`${API}/health`),
+          fetch(`${API}/api/health/llm`),
+        ]);
+        const sys = await sysRes.json();
+        const llm = await llmRes.json();
+        const dot = document.getElementById('systemDot');
+        const status = document.getElementById('systemStatus');
+        if (sys.status === 'ok' && llm.llm_running) {
+          dot.classList.add('active');
+          status.textContent = 'System Online';
+        } else if (sys.status === 'ok') {
+          dot.style.background = 'var(--accent3)';
+          status.textContent = 'LLM Offline';
+          log('Gemini not responding. Check GEMINI_API_KEY.', 'warn');
+        } else {
+          status.textContent = 'Offline';
+        }
+      } catch {
+        document.getElementById('systemStatus').textContent = 'API Offline';
+      }
+    }
+
+    // ─── LOGGER ──────────────────────────────────────────────────────
+    function log(msg, type = 'info') {
+      const container = document.getElementById('activityLog');
+      const now = new Date().toLocaleTimeString('en-IN', { hour12: false });
+      const line = document.createElement('div');
+      line.className = 'log-line';
+      line.innerHTML = `<span class="log-time">${now}</span><span class="log-msg ${type}">${msg}</span>`;
+      container.appendChild(line);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function clearLog() {
+      document.getElementById('activityLog').innerHTML = '';
+    }
+
+    // ─── TOAST ───────────────────────────────────────────────────────
+    function toast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = `show ${type}`;
+      setTimeout(() => { t.className = ''; }, 3000);
+    }
+
+    async function loadMetrics() {
+      try {
+        const res = await fetch(`${API}/api/metrics`);
+        if (!res.ok) return;
+        const data = await res.json();
+        document.getElementById('metricRequirements').textContent = data.total_requirements ?? 0;
+        document.getElementById('metricSavings').textContent = `${Number(data.avg_savings_percent || 0).toFixed(1)}%`;
+        document.getElementById('metricSuccess').textContent = `${Number(data.success_rate || 0).toFixed(0)}%`;
+        document.getElementById('metricVendors').textContent = data.total_vendors_discovered ?? 0;
+      } catch (e) {
+        log(`Metrics unavailable: ${e.message}`, 'warn');
+      }
+    }
+
+    // ─── PIPELINE STATE ──────────────────────────────────────────────
+    function setStep(step, state) {
+      const el = document.getElementById(`step-${step}`);
+      if (!el) return;
+      el.className = `pipeline-step ${state}`;
+      const icons = {
+        done: '✓', active: '◉', error: '✗', pending: el.querySelector('.step-icon')?.textContent || ''
+      };
+      if (state !== 'pending') {
+        el.querySelector('.step-icon').textContent = icons[state] || '';
+      }
+    }
+
+    // ─── ANALYSIS START ──────────────────────────────────────────────
+    async function startAnalysis() {
+      const input = document.getElementById('requirementInput').value.trim();
+      if (!input) { toast('Enter a procurement requirement', 'error'); return; }
+
+      const btn = document.getElementById('analyzeBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Parsing...';
+      setStep('parse', 'active');
+      log(`Analyzing: "${input}"`);
+
+      try {
+        const res = await fetch(`${API}/api/analyze`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ input_text: input }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.detail || 'Analysis failed');
+        }
+
+      if (bestDealInterval) clearInterval(bestDealInterval);
+      bestDealInterval = null;
+      negotiationLoadedFor = null;
+      outreachLoggedFor = null;
+      responsesLoggedCount = 0;
+      document.getElementById('best-deal-card').style.display = 'none';
+
+        currentReqId = data.requirement_id;
+        currentRequirementId = data.requirement_id;
+        setStep('parse', 'done');
+        const p = data.parsed;
+        currentQuantity = p.quantity;
+        currentUnit = p.unit;
+        log(`Parsed: ${p.quantity}${p.unit} of ${p.item} in ${p.location} @ ₹${p.current_price}/unit`, 'success');
+        log(`Vendor discovery started in background (req #${currentReqId})`);
+
+        setStep('discover', 'active');
+        showPanels();
+        startPolling();
+
+      } catch (e) {
+        setStep('parse', 'error');
+        log(`Error: ${e.message}`, 'error');
+        toast(e.message, 'error');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Analyze →';
+    }
+
+    // ─── POLLING ─────────────────────────────────────────────────────
+    function startPolling() {
+      if (pollInterval) clearInterval(pollInterval);
+      pollStatus();
+      pollInterval = setInterval(pollStatus, 2000);
+    }
+
+    async function pollStatus() {
+      if (!currentReqId) return;
+      try {
+        const res = await fetch(`${API}/api/status/${currentReqId}`);
+        const data = await res.json();
+        updateFromStatus(data);
+      } catch (e) {
+        log(`Poll error: ${e.message}`, 'warn');
+      }
+    }
+
+    function updateFromStatus(data) {
+      const status = data.status;
+      document.getElementById('systemStatus').textContent = status || 'Processing';
+
+      if (data.vendors_found > 0) {
+        setStep('discover', 'done');
+        setStep('outreach', data.vendors_found > 0 ? 'done' : 'active');
+        document.getElementById('vendorCount').textContent = `${data.vendors_found} vendors`;
+        renderVendorTable(data.vendors);
+        populateVendorSelect(data.vendors);
+        document.getElementById('vendorsPanel').style.display = 'block';
+        document.getElementById('outreachPanel').style.display = 'block';
+        document.getElementById('responsePanel').style.display = 'block';
+        document.getElementById('roiPanel').style.display = 'block';
+        loadOutreach();
+      }
+
+      if (data.responses_received > 0 && data.responses_received > responsesLoggedCount) {
+        setStep('responses', 'done');
+        setStep('extract', 'active');
+        responsesLoggedCount = data.responses_received;
+        log(`${data.responses_received} vendor responses received`, 'success');
+      }
+
+      if (data.roi_calculated) {
+        setStep('extract', 'done');
+        setStep('roi', 'done');
+        clearInterval(pollInterval);
+        loadROIResult();
+        loadNegotiationStatuses();
+      }
+
+      if (status === 'no_vendors_found') {
+        setStep('discover', 'error');
+        log('No vendors found. Try broader item name or location.', 'error');
+        clearInterval(pollInterval);
+      }
+
+      if (status === 'discovery_error') {
+        setStep('discover', 'error');
+        log('Vendor discovery failed. Check logs.', 'error');
+        clearInterval(pollInterval);
+      }
+
+      if (status === 'completed' || status === 'complete' || status === 'roi_ready') {
+        setStep('roi', 'done');
+        clearInterval(pollInterval);
+        loadROIResult();
+        loadNegotiationStatuses();
+      }
+
+      if (status === 'failed') {
+        setStep('roi', 'error');
+        clearInterval(pollInterval);
+      }
+    }
+
+    // ─── VENDOR TABLE ─────────────────────────────────────────────────
+    function renderVendorTable(vendors) {
+      if (!vendors || vendors.length === 0) return;
+      const container = document.getElementById('vendorTableBody');
+      const escapeAttr = value => String(value ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+      let html = `
+    <table class="vendor-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Status</th>
+          <th>Location</th>
+          <th>Rating</th>
+          <th>Negotiation</th>
+          <th>Details & Actions</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+      vendors.forEach(v => {
+        const vendorId = v.vendor_id || v.id;
+        const vendorName = v.vendor_name || v.name || '';
+        const phone = v.phone || '—';
+        const wa = v.phone ? `<a class="wa-link" href="https://wa.me/91${v.phone}" target="_blank">WhatsApp ↗</a>` : '';
+        const storeLink = v.profile_url ? `<a class="wa-link" href="${v.profile_url}" target="_blank" style="border-color:var(--border); color:#888;">Shop ↗</a>` : '';
+        const ratingDisplay = v.rating ? `<span style="color:var(--accent3);">${v.rating}⭐</span>` : '<span style="color:var(--muted); font-size:10px;">—</span>';
+        const vendorStatus = v.status || v.contact_status || 'pending';
+        const statusColor = vendorStatus === 'responded' ? 'green' : 'yellow';
+        const dataPrice = v.extracted_price || v.quoted_price || v.price || 0;
+
+        html += `
+      <tr data-vendor-id="${escapeAttr(vendorId)}" data-vendor-name="${escapeAttr(vendorName)}">
+        <td style="font-weight:600">${vendorName}</td>
+        <td style="font-family:var(--mono); font-size:12px">${phone}</td>
+        <td><span class="badge ${statusColor}">${vendorStatus}</span></td>
+        <td style="color:var(--muted); font-size:12px">${v.location || '—'}</td>
+        <td>${ratingDisplay}</td>
+        <td id="neg-status-${escapeAttr(vendorId)}"><span style="color:#8b949e">&#x23F3; Pending</span></td>
+        <td><div style="display:flex; gap:8px;">${storeLink} ${wa}</div></td>
+        <td data-price="${escapeAttr(dataPrice)}">
+          <button
+            id="neg-btn-${escapeAttr(vendorId)}"
+            onclick="negotiateVendor(event, ${Number(vendorId)}, currentRequirementId)"
+            style="background:#1c2128; color:#4da6ff; border:1px solid #4da6ff; padding:3px 10px; border-radius:4px; cursor:pointer; font-size:12px;"
+          >Negotiate</button>
+        </td>
+      </tr>
+    `;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    function populateVendorSelect(vendors) {
+      const sel = document.getElementById('vendorSelect');
+      sel.innerHTML = vendors
+        .map(v => `<option value="${v.vendor_id || v.id}">${v.vendor_name || v.name}${v.phone ? ' — ' + v.phone : ''}</option>`)
+        .join('');
+    }
+
+    // ─── OUTREACH ─────────────────────────────────────────────────────
+    async function loadNegotiationStatuses() {
+      if (!currentRequirementId || negotiationLoadedFor === currentRequirementId) return;
+      negotiationLoadedFor = currentRequirementId;
+      try {
+        const res = await fetch(`${API}/api/negotiations/${currentRequirementId}`);
+        if (!res.ok) return;
+        const negotiationData = await res.json();
+        const negMap = {};
+        negotiationData.forEach(n => { negMap[n.vendor_id] = n; });
+        const negDisplay = {
+          pending: '<span style="color:#8b949e">&#x23F3; Pending</span>',
+          message_sent: '<span style="color:#4da6ff">&#x1F4E8; Contacted</span>',
+          counter_received: '<span style="color:#ffaa00">&#x1F504; Counter Received</span>',
+          accepted: '<span style="color:#00cc66">&#x2705; Deal Accepted</span>',
+          rejected: '<span style="color:#ff4444">&#x274C; Rejected</span>'
+        };
+        document.querySelectorAll('[data-vendor-id]').forEach(row => {
+          const vendorId = row.getAttribute('data-vendor-id');
+          const statusCell = document.getElementById(`neg-status-${vendorId}`);
+          const negotiation = negMap[vendorId];
+          if (statusCell && negotiation) {
+            statusCell.innerHTML = negDisplay[negotiation.status] || negDisplay.pending;
+          }
+        });
+      } catch (e) {
+        log(`Negotiation status unavailable: ${e.message}`, 'warn');
+      }
+    }
+
+    async function negotiateVendor(event, vendorId, requirementId) {
+      const btn = event.target;
+      btn.disabled = true;
+      btn.innerText = 'Sending...';
+
+      let bestPrice = null;
+      document.querySelectorAll('[data-vendor-id]').forEach(row => {
+        const priceCell = row.querySelector('[data-price]');
+        if (priceCell) {
+          const val = parseFloat(priceCell.getAttribute('data-price'));
+          if (!isNaN(val) && val > 0 && (bestPrice === null || val < bestPrice)) {
+            bestPrice = val;
+          }
+        }
+      });
+      if (bestPrice === null) bestPrice = 0;
+
+      try {
+        const res = await fetch(`${API}/api/negotiate/${vendorId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            requirement_id: requirementId,
+            best_competing_price: bestPrice,
+            quantity: currentQuantity || 0,
+            unit: currentUnit || 'units'
+          })
+        });
+        if (!res.ok) throw new Error('Request failed');
+        const statusCell = document.getElementById(`neg-status-${vendorId}`);
+        if (statusCell) {
+          statusCell.innerHTML = '<span style="color:#4da6ff">&#x1F4E8; Contacted</span>';
+        }
+        btn.innerText = 'Sent';
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerText = 'Negotiate';
+        alert('Failed to send negotiation message. Try again.');
+      }
+    }
+
+    async function fetchAndRenderBestDeal(requirementId) {
+      try {
+        const res = await fetch(`${API}/api/best-deal/${requirementId}`);
+        const data = await res.json();
+        const card = document.getElementById('best-deal-card');
+        const inprogress = document.getElementById('best-deal-inprogress');
+
+        if (data.status === 'deal_found') {
+          card.style.display = 'block';
+          inprogress.style.display = 'none';
+          document.getElementById('best-deal-vendor').innerText = data.vendor_name;
+          document.getElementById('best-deal-price').innerText =
+            'Rs.' + data.final_price + ' / ' + (currentUnit || 'unit');
+          document.getElementById('best-deal-savings').innerText =
+            data.savings_vs_market !== null
+              ? data.savings_vs_market + '% below market average'
+              : 'Savings data unavailable';
+          return true;
+        } else if (data.status === 'negotiation_in_progress') {
+          card.style.display = 'block';
+          inprogress.style.display = 'block';
+          document.getElementById('best-deal-inprogress-msg').innerText = data.message;
+          document.getElementById('best-deal-vendor').innerText = '';
+          document.getElementById('best-deal-price').innerText = '';
+          document.getElementById('best-deal-savings').innerText = '';
+          return false;
+        }
+        return false;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    async function startBestDealPolling() {
+      if (!currentRequirementId) return;
+      const done = await fetchAndRenderBestDeal(currentRequirementId);
+      if (done) return;
+      if (bestDealInterval) clearInterval(bestDealInterval);
+      bestDealInterval = setInterval(async () => {
+        const complete = await fetchAndRenderBestDeal(currentRequirementId);
+        if (complete) clearInterval(bestDealInterval);
+      }, 5000);
+    }
+
+    async function loadOutreach() {
+      if (!currentReqId) return;
+      if (outreachLoggedFor === currentReqId) return;
+      try {
+        const res = await fetch(`${API}/api/outreach/${currentReqId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        renderOutreach(data);
+        setStep('outreach', 'done');
+        outreachLoggedFor = currentReqId;
+        log(`${data.total_messages} outreach messages prepared`, 'success');
+      } catch { }
+    }
+
+    function renderOutreach(data) {
+      const container = document.getElementById('outreachBody');
+      if (!data.batches) return;
+
+      let html = `<div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:16px">${data.instructions}</div>`;
+
+      Object.entries(data.batches).forEach(([batch, msgs]) => {
+        html += `<div style="margin-bottom:20px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--accent3);margin-bottom:8px;letter-spacing:0.1em">BATCH ${batch}</div>`;
+
+        msgs.forEach(m => {
+          const phone = m.vendor_phone || '—';
+          const waLink = m.wa_link
+            ? `<a class="wa-link" href="${m.wa_link}" target="_blank" onclick="markSent(${m.log_id})">Send ↗</a>`
+            : '<span style="color:var(--muted);font-size:11px">No phone</span>';
+          const statusColor = m.status === 'sent' ? 'green' : 'yellow';
+          html += `
+        <div style="border:1px solid var(--border);padding:12px;margin-bottom:8px;background:var(--bg)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <strong style="font-size:13px">${m.vendor_name}</strong>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span class="badge ${statusColor}" id="status-${m.log_id}">${m.status}</span>
+              ${waLink}
+            </div>
+          </div>
+          <div style="font-family:var(--mono);font-size:11px;color:#999;background:var(--surface2);padding:8px;white-space:pre-wrap;line-height:1.6">${m.message}</div>
+        </div>`;
+        });
+        html += '</div>';
+      });
+
+      container.innerHTML = html;
+    }
+
+    async function markSent(logId) {
+      try {
+        await fetch(`${API}/api/outreach/mark-sent/${logId}`, { method: 'POST' });
+        const el = document.getElementById(`status-${logId}`);
+        if (el) { el.textContent = 'sent'; el.className = 'badge green'; }
+      } catch { }
+    }
+
+    // ─── RESPONSE SUBMISSION ──────────────────────────────────────────
+    async function submitResponse() {
+      const vendorId = parseInt(document.getElementById('vendorSelect').value);
+      const message = document.getElementById('vendorMessage').value.trim();
+
+      if (!message) { toast('Enter vendor reply message', 'error'); return; }
+      if (!currentReqId) { toast('No active requirement', 'error'); return; }
+
+      log(`Submitting response from vendor #${vendorId}...`);
+
+      try {
+        const res = await fetch(`${API}/api/vendors/response`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            vendor_id: vendorId,
+            requirement_id: currentReqId,
+            raw_message: message,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail);
+
+        document.getElementById('vendorMessage').value = '';
+        setStep('responses', 'done');
+        log(`Response stored (ID: ${data.response_id}). Run ROI analysis when ready.`, 'success');
+        toast('Response submitted');
+      } catch (e) {
+        log(`Submit error: ${e.message}`, 'error');
+        toast(e.message, 'error');
+      }
+    }
+
+    // ─── ROI ANALYSIS ─────────────────────────────────────────────────
+    async function runROI() {
+      if (!currentReqId) { toast('No active requirement', 'error'); return; }
+
+      log('Running ROI analysis...');
+      setStep('extract', 'active');
+
+      try {
+        const res = await fetch(`${API}/api/roi/${currentReqId}`, { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || JSON.stringify(data));
+
+        setStep('extract', 'done');
+        setStep('roi', 'done');
+        renderROI(data);
+        startBestDealPolling();
+        log(`ROI complete: ₹${data.total_savings?.toLocaleString()} total savings (${data.savings_pct?.toFixed(1)}%)`, 'success');
+        toast('ROI analysis complete!');
+      } catch (e) {
+        setStep('roi', 'error');
+        log(`ROI error: ${e.message}`, 'error');
+        toast(e.message, 'error');
+      }
+    }
+
+    async function loadROIResult() {
+      if (!currentReqId) return;
+      try {
+        const res = await fetch(`${API}/api/roi/${currentReqId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        document.getElementById('roiPanel').style.display = 'block';
+        renderROI(data);
+        startBestDealPolling();
+        loadMetrics();
+      } catch (e) {
+        log(`ROI result unavailable: ${e.message}`, 'warn');
+      }
+    }
+
+    function renderROI(d) {
+      const container = document.getElementById('roiBody');
+      if (d.error) {
+        container.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div>${d.error}</div>`;
+        return;
+      }
+
+      const confColor = { high: 'green', medium: 'yellow', low: 'red' }[d.confidence] || 'yellow';
+      document.getElementById('confidenceBadge').textContent = `${d.confidence} confidence`;
+      document.getElementById('confidenceBadge').className = `badge ${confColor}`;
+
+      const savings = d.total_savings || 0;
+      const savingsPct = d.savings_pct || 0;
+      const vendorCount = d.vendor_count || d.response_count || 0;
+      let confidenceMessage = '<div id="confidence-warning"></div>';
+      if (vendorCount < 3 || d.confidence === 'low') {
+        confidenceMessage = `<div id="confidence-warning" class="confidence-message warn">Only ${vendorCount} vendor(s) responded. Confidence is low - get at least 3 quotes for reliable results.</div>`;
+      } else if (d.confidence === 'high' && vendorCount >= 5) {
+        confidenceMessage = `<div id="confidence-warning" class="confidence-message good">High confidence - based on ${vendorCount} vendor quotes.</div>`;
+      }
+
+      container.innerHTML = `
+    ${confidenceMessage}
+    <div class="roi-grid">
+      <div class="roi-card">
+        <div class="roi-label">Current Price / Unit</div>
+        <div class="roi-value">₹${d.current_price?.toLocaleString()}</div>
+        <div class="roi-sub">Existing supplier</div>
+      </div>
+      <div class="roi-card">
+        <div class="roi-label">Best Vendor Price</div>
+        <div class="roi-value green">₹${d.best_price?.toLocaleString()}</div>
+        <div class="roi-sub">${d.best_vendor_name || '—'}</div>
+      </div>
+      <div class="roi-card">
+        <div class="roi-label">Savings Per Unit</div>
+        <div class="roi-value ${savings > 0 ? 'green' : 'red'}">₹${Math.abs(d.best_price ? d.current_price - d.best_price : 0).toFixed(2)}</div>
+        <div class="roi-sub">${savingsPct.toFixed(1)}% reduction</div>
+      </div>
+      <div class="roi-card">
+        <div class="roi-label">Total Order Savings</div>
+        <div class="roi-value green">₹${savings.toLocaleString()}</div>
+        <div class="roi-sub">${d.quantity} ${d.unit}</div>
+      </div>
+      <div class="roi-card">
+        <div class="roi-label">Market Avg Price</div>
+        <div class="roi-value">₹${d.avg_price?.toLocaleString()}</div>
+        <div class="roi-sub">${d.response_count} responses</div>
+      </div>
+      <div class="roi-card">
+        <div class="roi-label">Annual Est. Savings</div>
+        <div class="roi-value yellow">₹${(savings * 12).toLocaleString()}</div>
+        <div class="roi-sub">Monthly order assumed</div>
+      </div>
+    </div>
+    ${d.executive_report ? `<div class="roi-label" style="margin-bottom:8px">// Executive Summary</div>
+    <div class="report-box">${d.executive_report}</div>` : ''}
+  `;
+    }
+
+    // ─── UI HELPERS ───────────────────────────────────────────────────
+    function showPanels() {
+      document.getElementById('vendorsPanel').style.display = 'block';
+    }
+
+    document.getElementById('requirementInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') startAnalysis();
+    });
+
+    // Init
+    checkHealth();
+    loadMetrics();
+  </script>
+</body>
+
+</html>

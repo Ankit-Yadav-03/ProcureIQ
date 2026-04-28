@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+data/procurement.db
+.playwright/
+node_modules/
+*.log
+.DS_Store
+venv/
+.venv/
+dist/
+build/
