@@ -7,9 +7,6 @@ tests
 
 # Local runtime artifacts — must NOT leak into production image
 *.log
-core/procurement.log
-data/procurement.db
-*.db
 .DS_Store
 .playwright/
 node_modules/

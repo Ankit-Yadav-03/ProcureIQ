@@ -27,6 +27,9 @@ RUN if [ "$INSTALL_PLAYWRIGHT" = "true" ]; then \
 
 COPY . .
 
+# Initialize demo SQLite database during image build
+RUN python seed_demo_data.py || true
+
 # Render (and most cloud platforms) set PORT env var automatically
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080
